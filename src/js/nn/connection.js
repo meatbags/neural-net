@@ -1,9 +1,9 @@
-/** Connector */
+/** connection */
 
 import Element from '../util/element';
 import Round from '../maths/round';
 
-class Connector {
+class Connection {
   constructor(params) {
     this.params = params;
     this.node = {
@@ -41,7 +41,7 @@ class Connector {
   }
 
   refresh() {
-    // set connector position, rotation, size
+    // set connection position, rotation, size
     let rect1 = this.node.src.el.getBoundingClientRect();
     let rect2 = this.node.dst.el.getBoundingClientRect();
     let radius = rect1.width / 2;
@@ -59,21 +59,21 @@ class Connector {
 
   render() {
     this.el = Element({
-      class: 'connector',
+      class: 'connection',
       children: [
-        { class: 'connector__inner' },
-        { class: 'connector__weight' },
+        { class: 'connection__inner' },
+        { class: 'connection__weight' },
       ],
     });
 
     // refs
     this.ref = {};
-    this.ref.inner = this.el.querySelector('.connector__inner');
-    this.ref.weight = this.el.querySelector('.connector__weight');
+    this.ref.inner = this.el.querySelector('.connection__inner');
+    this.ref.weight = this.el.querySelector('.connection__weight');
 
     // add to from connection
     this.node.src.el.appendChild(this.el);
   }
 }
 
-export default Connector;
+export default Connection;

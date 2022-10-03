@@ -10,19 +10,10 @@ class Neuron {
     this.error = 0;
     this.weightedInput = 0;
     this.value = 0;
+    this.bias = params.bias !== undefined ? params.bias : 0;
     this.activation = params.activation || null;
     this.connections = { in: [], out: [] };
-    this.reset();
     this.render();
-  }
-
-  reset() {
-    if (this.connections.in.length > 0) {
-      this.value = 0;
-    }
-    this.bias = this.params.bias !== undefined ? this.params.bias : 0;
-    this.weightedInput = 0;
-    this.error = 0;
   }
 
   getValue() {

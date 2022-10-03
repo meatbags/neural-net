@@ -1,7 +1,7 @@
 /** Layer */
 
 import Neuron from './neuron';
-import Connector from './connector';
+import Connection from './connection';
 import Element from '../util/element';
 
 class Layer {
@@ -30,7 +30,7 @@ class Layer {
   connect(layer) {
     this.neurons.forEach(src => {
       layer.neurons.forEach(dst => {
-        let conn = new Connector({src: src, dst: dst});
+        let conn = new Connection({src: src, dst: dst});
         this.connections.push(conn);
       });
     });
@@ -42,13 +42,30 @@ class Layer {
   }
 
   reset() {
-    this.neurons.forEach(neuron => neuron.reset());
     this.connections.forEach(conn => conn.reset());
   }
 
   refresh() {
     this.neurons.forEach(neuron => neuron.refresh());
     this.connections.forEach(conn => conn.refresh());
+  }
+
+  toJSON() {
+    let json = {};
+    json.size = this.neurons.length;
+    if (this.params.bias !== undefined) json.bias = this.params.bias;
+    if (this.params.activation !== undefined) json.activation = this.params.activation;
+    json.weights = [];
+    this.neurons.forEach(neuron => {
+      if (neuron.connections.out.length) {
+        json.weights.push(neuron.connections.out.map(conn => conn.getWeight()));
+      }
+    });
+    return json;
+  }
+
+  fromJSON(json) {
+
   }
 
   render() {
@@ -67,14 +84,17 @@ class Layer {
       }],
     });
 
+    this.el.querySelector('.layer__info').appendChild(Element({
+      innerText: `N(${this.params.size})`
+    }));
     if (this.params.bias !== undefined) {
       this.el.querySelector('.layer__info').appendChild(Element({
-        innerText: 'BIAS=' + this.params.bias,
+        innerText: `BIAS(${this.params.bias})`,
       }));
     }
     if (this.params.activation !== undefined) {
       this.el.querySelector('.layer__info').appendChild(Element({
-        innerText: this.params.activation,
+        innerText: `Z(${this.params.activation})`,
       }));
     }
   }

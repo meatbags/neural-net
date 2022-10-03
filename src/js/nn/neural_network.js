@@ -8,20 +8,22 @@ import Round from '../maths/round';
 class NeuralNetwork {
   constructor() {
     this.data = [
-      { input: [1, 0, 1], target: [1, 0, 0, 0, 0, 0, 0, 0, 0] },
+      { input: [1, 0, 1], target: [1, 0, 0, 1] },
     ];
     this.state = {
       learningRate: 0.125,
       layers: [
         { size: this.data[0].input.length, values: this.data.input },
-        { size: 4, bias: 0, activation: Activation.SIGMOID },
-        { size: 5, bias: 0, activation: Activation.SIGMOID },
-        { size: 6, bias: 0, activation: Activation.SIGMOID },
+        { size: 8, bias: 1, activation: Activation.SIGMOID },
+        { size: 8, bias: 1, activation: Activation.SIGMOID },
+        { size: 4, bias: 1, activation: Activation.SIGMOID },
+        { size: 8, bias: 1, activation: Activation.SIGMOID },
         { size: this.data[0].target.length, activation: Activation.SIGMOID },
       ],
     };
     this.stats = {
       cycles: 0,
+      epochs: 0,
       error: 0,
     };
 
@@ -40,14 +42,13 @@ class NeuralNetwork {
     this.outputLayer = this.layers[this.layers.length-1];
 
     this.render();
+
+    // set initial
+    this.reset();
   }
 
   setInput(input) {
     this.layers[0].set(input);
-  }
-
-  reset() {
-    this.layers.forEach(layer => layer.reset());
   }
 
   forward() {
@@ -55,15 +56,17 @@ class NeuralNetwork {
   }
 
   backpropagate() {
-    // backpropagate output & hidden layers
+    // backpropagate output
     this.outputLayer.neurons.forEach((neuron, i) => {
       neuron.calculateError(this.data[0].target[i]);
     });
+
+    // backpropagate hidden layers
     for (let i=this.hiddenLayers.length-1; i>=0; i--) {
       this.hiddenLayers[i].neurons.forEach(neuron => neuron.calculateError());
     }
 
-    // set weights
+    // set new weights
     this.layers.forEach(layer => {
       layer.neurons.forEach(neuron => neuron.backpropagate(this.state.learningRate));
     });
@@ -74,8 +77,24 @@ class NeuralNetwork {
       this.forward();
       this.backpropagate();
     }
-    this.stats.cycles += 1;
-    this.stats.error = Round(this.outputLayer.neurons.map(n => Math.abs(n.error)).reduce((a, b) => a + b), 5);
+    this.stats.cycles += n;
+    this.calculateTotalError();
+    this.refresh();
+  }
+
+  calculateTotalError() {
+    let total = 0;
+    this.outputLayer.neurons.forEach((neuron, i) => {
+      total += Math.abs(this.data[0].target[i] - neuron.value);
+    });
+    this.stats.error = Round(total, 5);
+  }
+
+  reset() {
+    this.layers.forEach(layer => layer.reset());
+    this.stats.cycles = 0;
+    this.forward();
+    this.calculateTotalError();
     this.refresh();
   }
 
@@ -83,7 +102,15 @@ class NeuralNetwork {
     this.layers.forEach(layer => layer.refresh());
     this.ref.learningRate.innerText = this.state.learningRate;
     this.ref.statCycles.innerText = this.stats.cycles;
+    this.ref.statEpochs.innerText = this.stats.epochs;
     this.ref.statError.innerText = this.stats.error;
+  }
+
+  toJSON() {
+    let json = {
+      layers: this.layers.map(layer => layer.toJSON()),
+    };
+    return json;
   }
 
   render() {
@@ -108,8 +135,9 @@ class NeuralNetwork {
       }, {
         class: 'neural-network__stats',
         children: [
-          { class: 'neural-network__stat', innerHTML: 'LearningRate: <span data-stat="learning-rate"></span>' },
           { class: 'neural-network__stat', innerHTML: 'Cycles: <span data-stat="cycles"></span>' },
+          { class: 'neural-network__stat', innerHTML: 'Epochs: <span data-stat="epochs"></span>' },
+          { class: 'neural-network__stat', innerHTML: 'Learning Rate: <span data-stat="learning-rate"></span>' },
           { class: 'neural-network__stat', innerHTML: 'Error: <span data-stat="error"></span>' },
         ]
       },{
@@ -168,6 +196,15 @@ class NeuralNetwork {
               }
             },
           },
+        }, {
+          class: 'neural-network__control',
+          innerText: 'MANIFEST {}',
+          addEventListener: {
+            click: () => {
+              let json = this.toJSON();
+              console.log(json);
+            }
+          }
         }]
       }],
     });
@@ -176,6 +213,7 @@ class NeuralNetwork {
     this.ref = {};
     this.ref.learningRate = this.el.querySelector('[data-stat="learning-rate"]');
     this.ref.statCycles = this.el.querySelector('[data-stat="cycles"]');
+    this.ref.statEpochs = this.el.querySelector('[data-stat="epochs"]');
     this.ref.statError = this.el.querySelector('[data-stat="error"]');
 
     // add to doc
