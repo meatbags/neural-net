@@ -1,0 +1,148 @@
+.neural-network {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 75%;
+  display: flex;
+  flex-direction: column;
+
+  .neural-network__layers {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+
+    .neural-network__label {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .layer {
+      width: 100%;
+      height: 100%;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .layer__neurons {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .neuron {
+          position: relative;
+          width: 50px;
+          height: 50px;
+          margin: 10px;
+          border-radius: 100%;
+          outline: 1px solid $white;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+
+          .neuron__value {}
+
+          .neuron__error {
+            font-size: 0.8em;
+          }
+
+          .connector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center left;
+            height: 20px;
+            pointer-events: none;
+
+            .connector__weight {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              padding-bottom: 16px;
+              opacity: 0;
+            }
+
+            .connector__inner {
+              position: absolute;
+              left: 50%;
+              top: 50%;
+              transform: translate(-50%, -50%);
+              height: 1px;
+              opacity: 0.5;
+              border-bottom: 1px dashed $white;
+
+              &:after {
+                content: ' ';
+                position: absolute;
+                right: 0;
+                top: 50%;
+                width: 8px;
+                height: 8px;
+                border-top: 1px solid $white;
+                border-right: 1px solid $white;
+                transform: rotate(45deg);
+                transform-origin: top right;
+                opacity: 0;
+              }
+            }
+          }
+
+          &:hover, &.selected {
+            .connector {
+              .connector__weight {
+                opacity: 1;
+              }
+
+              .connector__inner {
+                opacity: 1;
+                border-bottom: 1px solid $white;
+
+                &:after {
+                  opacity: 1;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .layer__info {
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  }
+
+  .neural-network__stats {
+    margin-bottom: 10px;
+  }
+
+  .neural-network__controls {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    user-select: none;
+
+    .neural-network__control {
+      padding: 10px;
+      margin-right: 5px;
+      outline: 1px solid $white;
+      cursor: pointer;
+    }
+  }
+}

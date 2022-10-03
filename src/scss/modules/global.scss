@@ -1,0 +1,17 @@
+div, * {
+  box-sizing: border-box;
+  // outline: 1px solid rgba(black, 0.05);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: monospace;
+  background: $black;
+  color: $white;
+  width: 100vw;
+  height: 100vh;
+}
