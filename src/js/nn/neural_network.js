@@ -8,16 +8,16 @@ import Round from '../maths/round';
 class NeuralNetwork {
   constructor() {
     this.data = [
-      { input: [1, 0, 1], target: [1, 0, 0, 1] },
+      { input: [1, 0, 1], target: [1, 0, 0, 0] },
     ];
     this.state = {
       learningRate: 0.125,
       layers: [
         { size: this.data[0].input.length, values: this.data.input },
-        { size: 8, bias: 1, activation: Activation.SIGMOID },
-        { size: 8, bias: 1, activation: Activation.SIGMOID },
         { size: 4, bias: 1, activation: Activation.SIGMOID },
-        { size: 8, bias: 1, activation: Activation.SIGMOID },
+        { size: 3, bias: 1, activation: Activation.SIGMOID },
+        { size: 7, bias: 1, activation: Activation.SIGMOID },
+        // { size: 8, bias: 1, activation: Activation.SIGMOID },
         { size: this.data[0].target.length, activation: Activation.SIGMOID },
       ],
     };
@@ -79,7 +79,6 @@ class NeuralNetwork {
     }
     this.stats.cycles += n;
     this.calculateTotalError();
-    this.refresh();
   }
 
   calculateTotalError() {
@@ -103,6 +102,7 @@ class NeuralNetwork {
     this.ref.learningRate.innerText = this.state.learningRate;
     this.ref.statCycles.innerText = this.stats.cycles;
     this.ref.statEpochs.innerText = this.stats.epochs;
+    this.ref.statTime.innerText = this.stats.time;
     this.ref.statError.innerText = this.stats.error;
   }
 
@@ -118,26 +118,14 @@ class NeuralNetwork {
       class: 'neural-network',
       children: [{
         class: 'neural-network__layers',
-        children: [{
-            class: 'neural-network__label',
-            children: this.data[0].input.map(value => ({
-              innerText: value,
-            }))
-          },
-          ...this.layers.map(layer => layer.el),
-          {
-            class: 'neural-network__label',
-            children: this.data[0].target.map(value => ({
-              innerText: value,
-            }))
-          }
-        ]
+        children: this.layers.map(layer => layer.el),
       }, {
         class: 'neural-network__stats',
         children: [
           { class: 'neural-network__stat', innerHTML: 'Cycles: <span data-stat="cycles"></span>' },
           { class: 'neural-network__stat', innerHTML: 'Epochs: <span data-stat="epochs"></span>' },
           { class: 'neural-network__stat', innerHTML: 'Learning Rate: <span data-stat="learning-rate"></span>' },
+          { class: 'neural-network__stat', innerHTML: 'Exec. time: <span data-stat="time"></span>' },
           { class: 'neural-network__stat', innerHTML: 'Error: <span data-stat="error"></span>' },
         ]
       },{
@@ -186,13 +174,24 @@ class NeuralNetwork {
               if (this.looping) {
                 this.looping = false;
               } else {
-                let callback = () => {
-                  if (this.looping) requestAnimationFrame(() => callback());
-                  this.cycle(1);
-                  this.refresh();
-                };
                 this.looping = true;
-                callback();
+                const callback = () => {
+                  return new Promise((resolve, reject) => {
+                    let now = performance.now();
+                    this.cycle(1);
+                    this.stats.time = `${Round(performance.now() - now, 3)}ms`;
+                    this.refresh();
+                    resolve();
+                  });
+                };
+                const loop = () => {
+                  callback().then(() => {
+                    if (this.looping) {
+                      setTimeout(() => loop(), 10);
+                    }
+                  });
+                }
+                loop();
               }
             },
           },
@@ -215,6 +214,7 @@ class NeuralNetwork {
     this.ref.statCycles = this.el.querySelector('[data-stat="cycles"]');
     this.ref.statEpochs = this.el.querySelector('[data-stat="epochs"]');
     this.ref.statError = this.el.querySelector('[data-stat="error"]');
+    this.ref.statTime = this.el.querySelector('[data-stat="time"]');
 
     // add to doc
     document.querySelector('body').appendChild(this.el);

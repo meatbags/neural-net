@@ -15,7 +15,7 @@ class Layer {
     if (params.bias !== undefined) p.bias = params.bias;
     if (params.activation !== undefined) p.activation = params.activation;
     for (let i=0; i<size; i++) {
-      this.neurons.push(new Neuron(p));
+      this.neurons.push(new Neuron({ index: i, ...p }));
     }
 
     this.render();
@@ -69,31 +69,28 @@ class Layer {
   }
 
   render() {
+    let neuronElements = this.neurons.map(neuron => neuron.visible ? neuron.el : null).filter(x => x !== null);
     this.el = Element({
       class: 'layer',
       children: [{
-        class: 'layer__neurons',
-        children: [
-          ...this.neurons.map(neuron => neuron.el), {
-            class: 'layer__info',
-          },
-        ],
+        class: 'layer__header',
+        children: [{
+          innerText: `(${this.params.size})`,
+        }]
       }, {
-        class: 'layer__controls',
-        children: [{}],
+        class: 'layer__neurons',
+        children: neuronElements,
+      }, {
+        class: 'layer__footer',
       }],
     });
-
-    this.el.querySelector('.layer__info').appendChild(Element({
-      innerText: `N(${this.params.size})`
-    }));
     if (this.params.bias !== undefined) {
-      this.el.querySelector('.layer__info').appendChild(Element({
+      this.el.querySelector('.layer__footer').appendChild(Element({
         innerText: `BIAS(${this.params.bias})`,
       }));
     }
     if (this.params.activation !== undefined) {
-      this.el.querySelector('.layer__info').appendChild(Element({
+      this.el.querySelector('.layer__footer').appendChild(Element({
         innerText: `Z(${this.params.activation})`,
       }));
     }

@@ -17,6 +17,44 @@
     font-size: 0.8em;
   }
 
+  .neuron__out, .neuron__in {
+    position: absolute;
+    top: 50%;
+    transform: translate(0, -50%);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: 1px solid $white;
+
+    &:before {
+      content: ' ';
+      position: absolute;
+      top: 50%;
+      width: 20px;
+      height: 1px;
+      background: $white;
+      opacity: 0.2;
+    }
+
+    &.neuron__in {
+      left: -40px;
+      transform: translate(0, -50%);
+      &:before { left: 20px; }
+    }
+
+    &.neuron__out {
+      right: -40px;
+      transform: translate(0, -50%);
+      &:before { left: -20px; }
+    }
+
+    &:not(.active) {
+      display: none;
+    }
+  }
+
   .connection {
     position: absolute;
     top: 50%;
@@ -29,8 +67,9 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      padding-bottom: 16px;
       opacity: 0;
+      padding: 2px 4px;
+      background: $black;
     }
 
     .connection__inner {
@@ -59,6 +98,8 @@
 
   &:hover, &.selected {
     .connection {
+      z-index: 1;
+
       .connection__weight {
         opacity: 1;
       }

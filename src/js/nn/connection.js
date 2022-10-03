@@ -13,6 +13,7 @@ class Connection {
     this.weight = params.weight !== undefined ? params.weight : Math.random();
     this.node.src.addOutgoingConnection(this);
     this.node.dst.addIncomingConnection(this);
+    this.visible = this.node.src.visible && this.node.dst.visible;
     this.render();
   }
 
@@ -41,6 +42,8 @@ class Connection {
   }
 
   refresh() {
+    if (!this.visible) return;
+
     // set connection position, rotation, size
     let rect1 = this.node.src.el.getBoundingClientRect();
     let rect2 = this.node.dst.el.getBoundingClientRect();
@@ -55,9 +58,12 @@ class Connection {
     this.ref.inner.style.width = `${dist - radius * 2}px`;
     this.ref.weight.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`;
     this.ref.weight.innerText = 'W=' + Round(this.weight, 3);
+    this.ref.inner.style.borderWidth = `${0.125 + this.weight * 10}px`;
   }
 
   render() {
+    if (!this.visible) return;
+    
     this.el = Element({
       class: 'connection',
       children: [
