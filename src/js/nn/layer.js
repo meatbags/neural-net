@@ -1,14 +1,14 @@
 /** Layer */
 
 import Neuron from './neuron';
-import Connection from './connection';
+import Synapse from './synapse';
 import Element from '../util/element';
 
 class Layer {
   constructor(params) {
     this.params = params;
     this.neurons = [];
-    this.connections = [];
+    this.synapses = [];
 
     let size = params.size || 0;
     let p = {};
@@ -30,8 +30,8 @@ class Layer {
   connect(layer) {
     this.neurons.forEach(src => {
       layer.neurons.forEach(dst => {
-        let conn = new Connection({src: src, dst: dst});
-        this.connections.push(conn);
+        let conn = new Synapse({src: src, dst: dst});
+        this.synapses.push(conn);
       });
     });
   }
@@ -42,12 +42,12 @@ class Layer {
   }
 
   reset() {
-    this.connections.forEach(conn => conn.reset());
+    this.synapses.forEach(conn => conn.reset());
   }
 
   refresh() {
     this.neurons.forEach(neuron => neuron.refresh());
-    this.connections.forEach(conn => conn.refresh());
+    this.synapses.forEach(conn => conn.refresh());
   }
 
   toJSON() {
@@ -57,16 +57,14 @@ class Layer {
     if (this.params.activation !== undefined) json.activation = this.params.activation;
     json.weights = [];
     this.neurons.forEach(neuron => {
-      if (neuron.connections.out.length) {
-        json.weights.push(neuron.connections.out.map(conn => conn.getWeight()));
+      if (neuron.syapses.out.length) {
+        json.weights.push(neuron.syapses.out.map(conn => conn.getWeight()));
       }
     });
     return json;
   }
 
-  fromJSON(json) {
-
-  }
+  fromJSON(json) {}
 
   render() {
     let neuronElements = this.neurons.map(neuron => neuron.visible ? neuron.el : null).filter(x => x !== null);

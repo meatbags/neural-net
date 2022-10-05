@@ -8,41 +8,91 @@
   display: flex;
   flex-direction: column;
 
+  .neural-network__body {
+    display: flex;
+    width: 100%;
+    height: 100%;
+
+    .neural-network__layers {
+      width: 80%;
+      height: 100%;
+      display: flex;
+      padding: 10px;
+      border-right: 1px solid $white;
+
+      .neural-network__label {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+
+    .neural-network__dataset {
+      width: 20%;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+
+      .data {
+        display: flex;
+        width: 100%;
+        background: black;
+        user-select: none;
+        border-radius: 2px;
+        border: 2px solid black;
+        cursor: pointer;
+
+        .data__input, .data__output, .data__error {
+          padding: 10px;
+          padding-right: 0;
+
+          &.data__input {
+            &:after {
+              content: '->';
+              padding-left: 10px;
+            }
+          }
+
+          &.data__error {
+            &:before {
+              content: 'E:';
+            }
+          }
+        }
+
+        &.active {
+          background: $white;
+          color: $black;
+        }
+
+        &.selected, &:hover {
+          border: 2px solid $white;
+        }
+      }
+    }
+  }
+
+  .neural-network__footer {
+    .neural-network__controls {
+      width: 100%;
+      display: flex;
+      justify-content: flex-start;
+      user-select: none;
+      border-top: 1px solid $white;
+      padding: 10px;
+
+      .neural-network__control {
+        padding: 10px;
+        margin-right: 5px;
+        outline: 1px solid $white;
+        cursor: pointer;
+      }
+    }
+  }
+
   .neural-network__stats {
     padding: 10px;
     position: absolute;
-  }
-
-  .neural-network__layers {
-    top: 0;
-    left: 0;
-    width: 80%;
-    height: 100%;
-    display: flex;
-    padding: 10px;
-    border-right: 1px solid $white;
-
-    .neural-network__label {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-  }
-
-  .neural-network__controls {
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-    user-select: none;
-    border-top: 1px solid $white;
-    padding: 10px;
-
-    .neural-network__control {
-      padding: 10px;
-      margin-right: 5px;
-      outline: 1px solid $white;
-      cursor: pointer;
-    }
   }
 }

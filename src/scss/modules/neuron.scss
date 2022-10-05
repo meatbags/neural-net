@@ -4,7 +4,7 @@
   height: 50px;
   margin: 10px;
   border-radius: 100%;
-  outline: 1px solid $white;
+  border: 1px solid $white;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -113,5 +113,13 @@
         }
       }
     }
+  }
+
+  &:not([data-outgoing]) {
+    border-width: 3px;
+  }
+
+  &:not([data-incoming]) {
+    border-width: 3px;
   }
 }

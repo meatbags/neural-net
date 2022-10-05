@@ -58,12 +58,12 @@ class Connection {
     this.ref.inner.style.width = `${dist - radius * 2}px`;
     this.ref.weight.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`;
     this.ref.weight.innerText = 'W=' + Round(this.weight, 3);
-    this.ref.inner.style.borderWidth = `${0.125 + this.weight * 10}px`;
+    this.ref.inner.style.borderWidth = `${0.125 + this.weight * 4}px`;
   }
 
   render() {
     if (!this.visible) return;
-    
+
     this.el = Element({
       class: 'connection',
       children: [

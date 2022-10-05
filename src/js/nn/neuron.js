@@ -42,10 +42,16 @@ class Neuron {
 
   addOutgoingConnection(conn) {
     this.connections.out.push(conn);
+    if (this.el) {
+      this.el.dataset.outgoing = 1;
+    }
   }
 
   addIncomingConnection(conn) {
     this.connections.in.push(conn);
+    if (this.el) {
+      this.el.dataset.incoming = 1;
+    }
   }
 
   calculateError(target=0) {
@@ -83,9 +89,31 @@ class Neuron {
     this.value = Activation.getValue(this.activation, this.weightedInput);
   }
 
+  isOutputNeuron() {
+    return this.connections.out.length == 0;
+  }
+
+  isInputNeuron() {
+    return this.connections.in.length == 0;
+  }
+
+  update() {
+    // if input transmit
+
+    // if forward-feeding
+
+
+    // if backpropagating
+
+
+    // if output snap value
+  }
+
   refresh() {
     if (!this.visible) return;
-
+    if (this.label) {
+      this.ref.label.innerText = this.label;
+    }
     this.ref.value.innerText = Round(this.value, 3);
     this.ref.error.innerText = this.error == 0 ? '' : Round(this.error, 5);
     if (!this.connections.in.length) {
@@ -100,10 +128,10 @@ class Neuron {
 
   render() {
     if (!this.visible) return;
-
     this.el = Element({
       class: 'neuron',
       children: [
+        { class: 'neuron__label' },
         { class: 'neuron__value' },
         { class: 'neuron__error' },
         { class: 'neuron__in' },
@@ -114,6 +142,7 @@ class Neuron {
       }
     });
     this.ref = {};
+    this.ref.label = this.el.querySelector('.neuron__label');
     this.ref.value = this.el.querySelector('.neuron__value');
     this.ref.error = this.el.querySelector('.neuron__error');
     this.ref.in = this.el.querySelector('.neuron__in');
