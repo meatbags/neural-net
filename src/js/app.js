@@ -1,12 +1,15 @@
 /** App */
 
 import NeuralNetwork from './nn/neural_network';
+import Dataset from './nn/dataset';
 
 class App {
   constructor() {
-    this.modules = { neuralNetwork: new NeuralNetwork(), };
+    this.modules = {
+      dataset: new Dataset(),
+      neuralNetwork: new NeuralNetwork(),
+    };
     this.call('bind');
-    this.call('refresh');
     window.addEventListener('resize', () => {
       this.call('refresh');
     });

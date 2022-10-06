@@ -4,7 +4,7 @@ import Activation from './activation';
 import Element from '../util/element';
 import Round from '../maths/round';
 
-const MAX_VISIBLE_NEURONS_PER_LAYER = 10;
+const MAX_VISIBLE_NEURONS_PER_LAYER = 12;
 
 class Neuron {
   constructor(params) {

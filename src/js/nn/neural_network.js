@@ -5,36 +5,36 @@ import Activation from './activation';
 import Element from '../util/element';
 import Round from '../maths/round';
 
+const LEARNING_RATE = 0.01;
+
 class NeuralNetwork {
   constructor() {
-    this.datasetIndex = -1;
-    this.dataset = [
-      { input: [0, 0], output: 0 },
-      { input: [0, 1], output: 1 },
-      { input: [1, 0], output: 0 },
-      { input: [1, 1], output: 1 },
-    ]
-
-    // state
-    this.state = {
-      learningRate: 0.125,
-      inputSize: 2,
-      outputSize: 2,
-    };
-
-    // stats
     this.stats = {
+      learningRate: LEARNING_RATE,
       epochs: 0,
       steps: 0,
+      dff: 0,
       totalError: 0,
+      averageError: 0,
     };
+  }
 
+  bind(root) {
+    this.ref = {};
+    this.ref.dataset = root.modules.dataset;
+  }
+
+  onDatasetLoaded() {
     // create layers
     this.layers = [
-      { size: this.state.inputSize, },
-      { size: 8, bias: 1, activation: Activation.SIGMOID },
-      { size: this.state.outputSize, activation: Activation.SIGMOID },
+      { size: this.ref.dataset.getInputSize(), },
+      // { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
+      { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
+      // { size: this.ref.dataset.getOutputSize(), bias: 1, activation: Activation.SIGMOID },
+      { size: this.ref.dataset.getOutputSize(), activation: Activation.SIGMOID },
     ].map(params => new Layer(params));
+
+    // connect neurons
     for (let i=0; i<this.layers.length; i++) {
       if (i + 1 < this.layers.length) {
         this.layers[i].connect(this.layers[i+1]);
@@ -43,7 +43,7 @@ class NeuralNetwork {
 
     // layer refs
     this.inputLayer = this.layers[0];
-    this.hiddenLayers = this.layers.filter((layer, i) => i !== 0 && i !== this.layers.length-1);
+    this.hiddenLayers = this.layers.filter((layer, i) => i > 0 && i < this.layers.length-1);
     this.outputLayer = this.layers[this.layers.length-1];
 
     // render UI
@@ -54,20 +54,18 @@ class NeuralNetwork {
   }
 
   forward(input=null) {
-    if (!input) return;
+    if (!input) {
+      let index = this.ref.dataset.getCurrentIndex();
+      let data = this.ref.dataset.getData(index);
+      input = data.input;
+    }
     this.inputLayer.setValues(input);
     this.layers.forEach(layer => layer.forward());
   }
 
-  getTargetArray(target) {
-    let arr = new Array(this.state.outputSize).fill(0);
-    arr[target] = 1;
-    return arr;
-  }
-
   backpropagate(target) {
     // create target if not array
-    target = this.getTargetArray(target);
+    target = this.ref.dataset.getOutputArray(target);
 
     // backpropagate output
     this.outputLayer.neurons.forEach((neuron, i) => {
@@ -81,61 +79,70 @@ class NeuralNetwork {
 
     // set new weights
     this.layers.forEach(layer => {
-      layer.neurons.forEach(neuron => neuron.backpropagate(this.state.learningRate));
+      layer.neurons.forEach(neuron => neuron.backpropagate(LEARNING_RATE));
     });
   }
 
-  getError(expected) {
-    expected = this.getTargetArray(expected);
+  getError(target) {
+    target = this.ref.dataset.getOutputArray(target);
     let error = 0;
     this.outputLayer.neurons.forEach((neuron, i) => {
-      error += Math.pow(expected[i] - neuron.value, 2);
+      error += Math.pow(target[i] - neuron.value, 2);
     });
     return error;
   }
 
   runEpochStep(index) {
-    let data = this.dataset[index];
+    let data = this.ref.dataset.getData(index);
     this.forward(data.input);
     this.backpropagate(data.output);
-    data.error = this.getError(data.output);
+    this.ref.dataset.setError(index, this.getError(data.output));
     this.stats.steps += 1;
   }
 
   runEpochs(n=1) {
-    this.datasetIndex = -1;
+    let samples = this.ref.dataset.getDataSize();
     for (let i=0; i<n; i++) {
       let error = 0;
-      for (let j=0; j<this.dataset.length; j++) {
+      for (let j=0; j<samples; j++) {
         this.runEpochStep(j);
-        error += this.dataset[j].error;
+        error += this.ref.dataset.getError(j);
       }
       this.stats.totalError = Round(error, 4);
+      this.stats.averageError = Round(error / samples, 4);
       this.stats.epochs += 1;
+      this.ref.dataset.shuffleData();
     }
   }
 
-  onDataSelected(data) {
-    this.datasetIndex = data.index;
-    this.forward(data.input);
-    this.refresh();
+  forwardSingle() {
+    this.forward();
+    let res = this.outputLayer.neurons.map(neuron => neuron.getValue());
+    let total = res.reduce((a, b) => a + b);
+    let normalised = res.map(value => value / total);
+    let max = Math.max(...normalised);
+    let index = normalised.findIndex(value => value == max);
+    console.log(index, normalised);
   }
 
   step() {
-    this.datasetIndex = (this.datasetIndex + 1) % this.dataset.length;
-    this.runEpochStep(this.datasetIndex);
+    this.runEpochStep(this.ref.dataset.getCurrentIndex());
+    this.ref.dataset.nextIndex();
   }
 
-  loop() {
+  loop(n=1) {
     if (this.looping) {
       this.looping = false;
     } else {
       this.looping = true;
       const callback = () => {
         return new Promise((resolve, reject) => {
-          //let now = performance.now();
-          this.runEpochs(1);
-          //this.stats.time = `${Round(performance.now() - now, 3)}ms`;
+          this.runEpochs(n);
+          // select random data point for visual interest
+          let index = Math.floor(this.ref.dataset.getDataSize() * Math.random());
+          let input = this.ref.dataset.getData(index).input;
+          this.forward(input);
+          // refresh
           this.refresh();
           resolve();
         });
@@ -156,7 +163,7 @@ class NeuralNetwork {
     this.stats.epochs = 0;
     this.stats.steps = 0;
     this.stats.totalError = 0;
-    this.forward(this.dataset[0].input);
+    this.forward(this.ref.dataset.getData(0).input);
     this.refresh();
   }
 
@@ -165,14 +172,7 @@ class NeuralNetwork {
     for (const key in this.stats) {
       this.ref[key].innerText = this.stats[key];
     }
-    this.el.querySelectorAll('.data.active').forEach(el => el.classList.remove('active'));
-    this.dataset.forEach((data, i) => {
-      let err = data.error !== undefined ? Round(data.error, 4) : 'n/a';
-      data.el.querySelector('.data__error').innerText = err;
-      if (this.datasetIndex == i) {
-        data.el.classList.add('active');
-      }
-    });
+    this.ref.dataset.refresh();
   }
 
   toJSON() {
@@ -183,69 +183,39 @@ class NeuralNetwork {
   }
 
   render() {
-    this.el = Element({
-      class: 'neural-network',
-      children: [{
-        class: 'neural-network__body',
-        children: [{
-          class: 'neural-network__layers',
-          children: this.layers.map(layer => layer.el),
-        }, {
-          class: 'neural-network__dataset',
-        }]
-      }, {
-        class: 'neural-network__footer',
-        children: [
-          { class: 'neural-network__controls' }
-        ]
-      }, {
-        class: 'neural-network__stats',
-      }],
+    this.el = {};
+    this.el.layers = Element({ class: 'neural-network__layers' });
+    this.el.controls = Element({ class: 'neural-network__controls' });
+    this.el.stats = Element({ class: 'neural-network__stats' });
+
+    // add layers
+    this.layers.forEach(layer => {
+      this.el.layers.appendChild(layer.el);
     });
 
-    // dataset
-    this.dataset.forEach((data, i) => {
-      data.index = i;
-      data.el = Element({
-        class: 'data',
-        dataset: { index: i },
-        children: [
-          { class: 'data__input', innerText: data.input }, {
-            class: 'data__output',
-            innerText: `${data.output} [${this.getTargetArray(data.output).join(',')}]`
-          },
-          { class: 'data__error', },
-        ],
-        addEventListener: {
-          click: () => {
-            this.onDataSelected(data);
-          }
-        }
-      });
-      this.el.querySelector('.neural-network__dataset').appendChild(data.el);
-    });
-
-    // controls
-    let controls = this.el.querySelector('.neural-network__controls');
+    // add controls
     let labelCallback = {
       'RESET': () => { this.reset(); },
-      'FORWARD': () => { this.forward(); },
+      'FORWARD>>': () => { this.forwardSingle(); },
       'STEP+1': () => { this.step(); },
       'EPOCH+1': () => { this.runEpochs(1); },
       'E+100': () => { this.runEpochs(100); },
       'E+1K': () => { this.runEpochs(1000); },
-      'LOOP+': () => { this.loop(); },
+      'LOOP+': () => { this.loop(1); },
+      'LOOP+10': () => { this.loop(10); },
+      'LOOP+50': () => { this.loop(50); },
       'MANIFEST {}': () => { console.log(this.toJSON()); },
     };
     for (const key in labelCallback) {
       let label = key;
       let callback = labelCallback[key];
-      controls.appendChild(
+      this.el.controls.appendChild(
         Element({
           class: 'neural-network__control',
           innerText: key,
           addEventListener: {
             click: () => {
+              console.log(key);
               callback();
               this.refresh();
             }
@@ -254,19 +224,20 @@ class NeuralNetwork {
       );
     }
 
-    // refs
-    this.ref = {};
+    // add stats
     for (const key in this.stats) {
       let stat = Element({
         class: 'neural-network__stat',
         innerHTML: `${key}: <span></span>`,
       });
-      this.el.querySelector('.neural-network__stats').appendChild(stat);
+      this.el.stats.appendChild(stat);
       this.ref[key] = stat.querySelector('span');
     }
 
     // add to doc
-    document.querySelector('body').appendChild(this.el);
+    document.querySelector('#neural-network').appendChild(this.el.layers);
+    document.querySelector('#neural-network').appendChild(this.el.stats);
+    document.querySelector('.neural-network__footer').appendChild(this.el.controls);
   }
 }
 
