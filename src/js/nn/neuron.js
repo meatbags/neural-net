@@ -89,12 +89,20 @@ class Neuron {
     this.value = Activation.getValue(this.activation, this.weightedInput);
   }
 
+  hasOutput() {
+    return this.connections.out.length > 0;
+  }
+
   isOutputNeuron() {
     return this.connections.out.length == 0;
   }
 
   isInputNeuron() {
     return this.connections.in.length == 0;
+  }
+
+  toJSON() {
+    // ???
   }
 
   update() {

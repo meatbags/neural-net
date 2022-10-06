@@ -57,8 +57,9 @@ class Layer {
     if (this.params.activation !== undefined) json.activation = this.params.activation;
     json.weights = [];
     this.neurons.forEach(neuron => {
-      if (neuron.syapses.out.length) {
-        json.weights.push(neuron.syapses.out.map(conn => conn.getWeight()));
+      if (neuron.hasOutput()) {
+        let weights = neuron.connections.out.map(conn => conn.getWeight());
+        json.weights.push(weights);
       }
     });
     return json;

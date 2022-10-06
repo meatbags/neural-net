@@ -30,6 +30,8 @@ class NeuralNetwork {
       { size: this.ref.dataset.getInputSize(), },
       // { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
       { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
+      { size: 6, bias: 0, activation: Activation.SIGMOID },
+      { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
       // { size: this.ref.dataset.getOutputSize(), bias: 1, activation: Activation.SIGMOID },
       { size: this.ref.dataset.getOutputSize(), activation: Activation.SIGMOID },
     ].map(params => new Layer(params));
@@ -117,12 +119,18 @@ class NeuralNetwork {
 
   forwardSingle() {
     this.forward();
-    let res = this.outputLayer.neurons.map(neuron => neuron.getValue());
-    let total = res.reduce((a, b) => a + b);
-    let normalised = res.map(value => value / total);
-    let max = Math.max(...normalised);
-    let index = normalised.findIndex(value => value == max);
-    console.log(index, normalised);
+    let index = this.getOutputValue();
+    console.log(index);
+  }
+
+  getOutputValue() {
+    let values = this.outputLayer.neurons.map(neuron => neuron.getValue());
+    //let total = values.reduce((a, b) => a + b);
+    //let normalised = values.map(value => value / total);
+    //let max = Math.max(...normalised);
+    let max = Math.max(...values);
+    let index = values.findIndex(value => value == max);
+    return index;
   }
 
   step() {
@@ -187,6 +195,7 @@ class NeuralNetwork {
     this.el.layers = Element({ class: 'neural-network__layers' });
     this.el.controls = Element({ class: 'neural-network__controls' });
     this.el.stats = Element({ class: 'neural-network__stats' });
+    this.el.inputBox = Element({ class: 'neural-network__input-box' });
 
     // add layers
     this.layers.forEach(layer => {
@@ -234,9 +243,37 @@ class NeuralNetwork {
       this.ref[key] = stat.querySelector('span');
     }
 
+    // add inputs
+    this.el.inputBox.appendChild(Element({
+      class: 'input-box',
+      children: [{
+        type: 'input',
+        name: 'nn-input'
+      }, {
+        class: 'input-box__button',
+        innerText: '>>',
+        addEventListener: {
+          click: () => {
+            let v = this.el.inputBox.querySelector('input[name="nn-input"]').value;
+            let input = v.split(',').map(v => parseInt(v));
+            this.ref.dataset.normalise(input);
+            this.forward(input);
+            let output = this.getOutputValue();
+            this.el.inputBox.querySelector('input[name="nn-output"]').value = output;
+            console.log(v, input, output);
+            this.refresh();
+          }
+        }
+      }, {
+        type: 'input',
+        name: 'nn-output'
+      }]
+    }));
+
     // add to doc
     document.querySelector('#neural-network').appendChild(this.el.layers);
     document.querySelector('#neural-network').appendChild(this.el.stats);
+    document.querySelector('#neural-network').appendChild(this.el.inputBox);
     document.querySelector('.neural-network__footer').appendChild(this.el.controls);
   }
 }

@@ -7,13 +7,13 @@ import Round from '../maths/round';
 let MAX_VISIBLE_DATA_ITEMS = 100;
 
 // network settings
-let HIDDEN_LAYER_SIZE_REDUCER = 7;
+let HIDDEN_LAYER_SIZE_REDUCER = 3;
 
 // data shaping
-let PADDING_VALUE = 10;
-let MINIMUM_TOTAL_SIZE = 4;
-let MAXIMUM_INPUT_SIZE = 4;
-let MAXIMUM_INPUT_VALUE = 10;
+let PADDING_VALUE = -1;
+let MAXIMUM_INPUT_SIZE = 5;
+let MINIMUM_TOTAL_SIZE = MAXIMUM_INPUT_SIZE + 1;
+let MAXIMUM_INPUT_VALUE = 9;
 
 class Dataset {
   constructor() {
@@ -52,7 +52,11 @@ class Dataset {
     data = data.filter(row => row.length >= MINIMUM_TOTAL_SIZE);
 
     // shift data down 1 mod 10 (1->0, 0->9)
-    data = data.map(row => row.filter(value => value == 0 ? 9 : value - 1));
+    data.forEach(row => {
+      for (let i=0; i<row.length; i++) {
+        row[i] = row[i] == 0 ? 9 : row[i] - 1;
+      }
+    });
 
     // pad data left
     let max = Math.max(...data.map(row => row.length));
@@ -74,7 +78,7 @@ class Dataset {
 
     // normalise input data
     data.forEach(row => {
-      row.input = row.input.map(value => value / MAXIMUM_INPUT_VALUE);
+      this.normalise(row.input);
     });
 
     // set data, shuffle
@@ -101,6 +105,12 @@ class Dataset {
       this.tokensUsed[this.tokenMap[char]] = true;
       return this.tokenMap[char];
     });
+  }
+
+  normalise(values) {
+    for (let i=0; i<values.length; i++) {
+      values[i] /= MAXIMUM_INPUT_VALUE;
+    }
   }
 
   setError(index, error) {
@@ -216,9 +226,7 @@ class Dataset {
         dataset: { index: i },
         children: [{
             class: 'data-input',
-            innerText: row.input.map(v => {
-              return v == 1 ? 'A' : Math.round(v * MAXIMUM_INPUT_VALUE);
-            }).join(' ')
+            innerText: row.input.map(v => Math.round(v * MAXIMUM_INPUT_VALUE)).join(' ')
           },
           { class: 'data-output', innerText: row.output },
           { class: 'data-error', },
