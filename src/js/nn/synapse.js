@@ -1,5 +1,7 @@
 /** connection */
 
+import * as THREE from 'three';
+import Global from '../render/global';
 import Element from '../util/element';
 import Round from '../maths/round';
 
@@ -15,6 +17,15 @@ class Connection {
     this.node.dst.addIncomingConnection(this);
     this.visible = this.node.src.visible && this.node.dst.visible;
     this.render();
+
+    // visualiser
+    let height = 1;
+    let thickness = 0.25;
+    let geo = new THREE.BoxBufferGeometry(thickness, height, thickness);
+    geo.translate(0, height/2, 0);
+    let mat = new THREE.MeshStandardMaterial();
+    this.mesh = new THREE.Mesh(geo, mat);
+    Global.Scene.add(this.mesh);
   }
 
   getWeight() {
@@ -42,23 +53,33 @@ class Connection {
   }
 
   refresh() {
-    if (!this.visible) return;
+    // HTML
+    if (this.visible) {
+      // set connection position, rotation, size
+      let rect1 = this.node.src.el.getBoundingClientRect();
+      let rect2 = this.node.dst.el.getBoundingClientRect();
+      let radius = rect1.width / 2;
+      let dx = rect2.left - rect1.left;
+      let dy = rect2.top - rect1.top;
+      let dist = Math.hypot(dx, dy);
+      let theta = Math.atan2(dy, dx);
+      let deg = theta / Math.PI * 180;
+      this.el.style.width = `${dist}px`;
+      this.el.style.transform = `translate(0, -50%) rotate(${deg}deg)`;
+      this.ref.inner.style.width = `${dist - radius * 2}px`;
+      this.ref.weight.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`;
+      this.ref.weight.innerText = 'W=' + Round(this.weight, 3);
+      this.ref.inner.style.borderWidth = `${0.125 + this.weight * 4}px`;
+    }
 
-    // set connection position, rotation, size
-    let rect1 = this.node.src.el.getBoundingClientRect();
-    let rect2 = this.node.dst.el.getBoundingClientRect();
-    let radius = rect1.width / 2;
-    let dx = rect2.left - rect1.left;
-    let dy = rect2.top - rect1.top;
-    let dist = Math.hypot(dx, dy);
-    let theta = Math.atan2(dy, dx);
-    let deg = theta / Math.PI * 180;
-    this.el.style.width = `${dist}px`;
-    this.el.style.transform = `translate(0, -50%) rotate(${deg}deg)`;
-    this.ref.inner.style.width = `${dist - radius * 2}px`;
-    this.ref.weight.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`;
-    this.ref.weight.innerText = 'W=' + Round(this.weight, 3);
-    this.ref.inner.style.borderWidth = `${0.125 + this.weight * 4}px`;
+    // visualiser
+    let p1 = this.node.src.mesh.position;
+    let p2 = this.node.dst.mesh.position;
+    let dist = p1.distanceTo(p2);
+    let theta = Math.atan2(p2.y-p1.y, p2.x-p1.x);
+    this.mesh.position.copy(p1);
+    this.mesh.scale.y = dist
+    this.mesh.rotation.z = theta - Math.PI / 2;
   }
 
   render() {

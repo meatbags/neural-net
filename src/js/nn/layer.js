@@ -1,5 +1,6 @@
 /** Layer */
 
+import * as THREE from 'three';
 import Neuron from './neuron';
 import Synapse from './synapse';
 import Element from '../util/element';
@@ -10,12 +11,21 @@ class Layer {
     this.neurons = [];
     this.synapses = [];
 
+
+    let x = params.index * 15;
     let size = params.size || 0;
     let p = {};
     if (params.bias !== undefined) p.bias = params.bias;
     if (params.activation !== undefined) p.activation = params.activation;
     for (let i=0; i<size; i++) {
-      this.neurons.push(new Neuron({ index: i, ...p }));
+      let position =
+      this.neurons.push(
+        new Neuron({
+          index: i,
+          position: new THREE.Vector3(x, i*5, 0),
+          ...p
+        })
+      );
     }
 
     this.render();

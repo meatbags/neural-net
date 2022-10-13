@@ -1,17 +1,24 @@
 /** App */
 
-import NeuralNetwork from './nn/neural_network';
-import Dataset from './nn/dataset';
+import NeuralNetworkDynamic from './dynamic/neural_network_dynamic';
+import Camera from './render/camera';
+import Scene from './render/scene';
+import Renderer from './render/renderer';
+import Loop from './render/loop';
 
 class App {
   constructor() {
     this.modules = {
-      dataset: new Dataset(),
-      neuralNetwork: new NeuralNetwork(),
+      neuralNetworkDynamic: new NeuralNetworkDynamic(),
+      camera: new Camera(),
+      scene: new Scene(),
+      renderer: new Renderer(),
+      loop: new Loop(),
     };
     this.call('bind');
+    this.call('resize');
     window.addEventListener('resize', () => {
-      this.call('refresh');
+      this.call('resize');
     });
   }
 

@@ -1,5 +1,8 @@
 /** Neuron */
 
+import * as THREE from 'three';
+import Global from '../render/global';
+
 import Activation from './activation';
 import Element from '../util/element';
 import Round from '../maths/round';
@@ -18,6 +21,14 @@ class Neuron {
     this.connections = { in: [], out: [] };
     this.visible = this.index < MAX_VISIBLE_NEURONS_PER_LAYER;
     this.render();
+
+    // visualiser
+    let geo = new THREE.SphereBufferGeometry(1, 12, 12);
+    let mat = new THREE.MeshStandardMaterial();
+    this.position = params.position || new THREE.Vector3();
+    this.mesh = new THREE.Mesh(geo, mat);
+    this.mesh.position.copy(this.position);
+    Global.Scene.add(this.mesh);
   }
 
   getValue() {
@@ -101,19 +112,12 @@ class Neuron {
     return this.connections.in.length == 0;
   }
 
-  toJSON() {
-    // ???
-  }
+  toJSON() {}
 
   update() {
     // if input transmit
-
     // if forward-feeding
-
-
     // if backpropagating
-
-
     // if output snap value
   }
 

@@ -17,6 +17,7 @@ class NeuralNetwork {
       totalError: 0,
       averageError: 0,
     };
+    this.renderScaffold();
   }
 
   bind(root) {
@@ -29,12 +30,12 @@ class NeuralNetwork {
     this.layers = [
       { size: this.ref.dataset.getInputSize(), },
       // { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
-      { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
+      { size: 12, bias: 0, activation: Activation.SIGMOID },
       { size: 6, bias: 0, activation: Activation.SIGMOID },
-      { size: this.ref.dataset.getHiddenLayerSize(), bias: 0, activation: Activation.SIGMOID },
+      { size: 5, bias: 0, activation: Activation.SIGMOID },
       // { size: this.ref.dataset.getOutputSize(), bias: 1, activation: Activation.SIGMOID },
       { size: this.ref.dataset.getOutputSize(), activation: Activation.SIGMOID },
-    ].map(params => new Layer(params));
+    ].map((params, i) => new Layer({ index: i, ...params }));
 
     // connect neurons
     for (let i=0; i<this.layers.length; i++) {
@@ -188,6 +189,26 @@ class NeuralNetwork {
       layers: this.layers.map(layer => layer.toJSON()),
     };
     return json;
+  }
+
+  renderScaffold() {
+    let scaffold = Element({
+      class: 'neural-network',
+      children: [{
+          class: 'neural-network__header',
+          innerHTML: '&nbsp;'
+        },{
+          class: 'neural-network__body',
+          children: [
+            { id: 'neural-network', class: 'neural-network__network' },
+            { id: 'dataset', class: 'neural-network__dataset' },
+          ],
+        }, {
+          class: 'neural-network__footer',
+        },
+      ]
+    });
+    document.querySelector('body').appendChild(scaffold);
   }
 
   render() {

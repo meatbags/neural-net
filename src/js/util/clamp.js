@@ -1,0 +1,7 @@
+/** Clamp */
+
+const Clamp = (value, min, max) => {
+  return Math.max(min, Math.min(max, value));
+};
+
+export default Clamp;
