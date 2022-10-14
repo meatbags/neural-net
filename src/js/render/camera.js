@@ -6,11 +6,6 @@ import Global from './global';
 class Camera {
   constructor() {
     this.camera = Global.Camera;
-    let x = 10;
-    let y = 0;
-    let z = 20;
-    this.camera.position.set(x, y, z);
-    this.camera.lookAt(new THREE.Vector3(x, y, 0));
   }
 
   resize() {
@@ -19,6 +14,22 @@ class Camera {
       let rect = document.querySelector('canvas').getBoundingClientRect();
       this.camera.aspect = rect.width / rect.height;
       this.camera.updateProjectionMatrix();
+
+      // centre
+      let x = 0;
+      let y = 0;
+      let n = 0;
+      Global.Scene.children.forEach(child => {
+        if (child.position) {
+          x += child.position.x;
+          y += child.position.y;
+          n += 1;
+        }
+      });
+      x /= n;
+      y /= n;
+      this.camera.position.set(0, 0, 60);
+      this.camera.lookAt(new THREE.Vector3(0, 0, 0));
     }, 50);
   }
 }

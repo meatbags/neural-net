@@ -1,4 +1,4 @@
-/** RELU activation function */
+/** Rectified Linear Unit activation function */
 
 const ReLU = x => Math.max(0, x);
 const ReLUDerivative = x => x > 0 ? 1 : 0;

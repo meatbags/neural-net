@@ -11,7 +11,9 @@ class Renderer {
   }
 
   resize() {
-    this.renderer.setSize(900, 700);
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    this.renderer.setSize(w, h);
   }
 
   render() {
