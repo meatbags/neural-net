@@ -2,17 +2,21 @@
 
 import * as THREE from 'three';
 import Global from '../render/global';
+import Config from './config';
 import Clamp from '../util/clamp';
 import { v4 as uuidv4 } from 'uuid';
-
-const BLEND = 0.025;
 
 class Sensor {
   constructor(params) {
     this.id = uuidv4();
 
     // value
-    this.value = params.value !== undefined ? params.value : 0;
+    this.value = 0;
+    if (params.value !== undefined) {
+      this.value = params.value;
+    } else {
+      this.randomise();
+    }
 
     // visualiser
     let geo = new THREE.BoxBufferGeometry(1, 1, 1);
@@ -26,9 +30,13 @@ class Sensor {
     return this.value;
   }
 
+  randomise() {
+    this.value = Config.SENSOR_MIN_VALUE + (Config.SENSOR_MAX_VALUE - Config.SENSOR_MIN_VALUE) * Math.random();
+  }
+
   update() {
     let target = Clamp(this.value, 0, 1);
-    this.mesh.material.emissiveIntensity += (target - this.mesh.material.emissiveIntensity) * BLEND;
+    this.mesh.material.emissiveIntensity += (target - this.mesh.material.emissiveIntensity) * Config.BLEND_FACTOR;
   }
 }
 

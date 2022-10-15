@@ -3,11 +3,8 @@
 import * as THREE from 'three';
 import { v4 as uuidv4 } from 'uuid';
 import Global from '../render/global';
+import Config from './config';
 import Clamp from '../util/clamp';
-
-const LEARNING_RATE = 1/8;
-const CHANGED_THRESHOLD = 0.01;
-const BLEND = 0.025;
 
 class Connection {
   constructor(src, dst) {
@@ -16,7 +13,7 @@ class Connection {
     // props
     this.src = src;
     this.dst = dst;
-    this.hasSensor = src.isSensor || dst.isSensor;
+    this.hasSensor = src.isSensor !== undefined || dst.isSensor !== undefined;
 
     // state
     this.src = src;
@@ -41,6 +38,10 @@ class Connection {
     this.setPosition();
   }
 
+  reset() {
+    this.weight = this.hasSensor ? 1 : Math.random();
+  }
+
   getValue() {
     return this.weight * this.src.getValue();
   }
@@ -56,15 +57,18 @@ class Connection {
   }
 
   buffer() {
+    // ignore sensor connectors
     if (this.hasSensor) return;
+
+    // get error
     let error = this.dst.getError ? this.dst.getError() : 0;
     if (error) {
-      this.weightBuffer = this.weight - error * this.src.getValue() * LEARNING_RATE;
+      this.weightBuffer = this.weight - error * this.src.getValue() * Config.LEARNING_RATE;
     }
   }
 
   swap() {
-    this.changed = Math.abs(this.weight - this.weightBuffer) >= CHANGED_THRESHOLD;
+    this.changed = Math.abs(this.weight - this.weightBuffer) >= Config.WEIGHT_CHANGED_THRESHOLD;
     this.weight = this.weightBuffer;
   }
 
@@ -80,11 +84,11 @@ class Connection {
 
   update() {
     let s = Math.max(0.25, this.weight * this.src.getValue()) * 0.25;
-    s = this.mesh.scale.x + (s - this.mesh.scale.x) * BLEND;
+    s = this.mesh.scale.x + (s - this.mesh.scale.x) * Config.BLEND_FACTOR;
     this.mesh.scale.x = s;
     this.mesh.scale.z = s;
     let target = Clamp(this.src.getValue(), 0, 1);
-    this.mesh.material.emissiveIntensity += (target - this.mesh.material.emissiveIntensity) * BLEND;
+    this.mesh.material.emissiveIntensity += (target - this.mesh.material.emissiveIntensity) * Config.BLEND_FACTOR;
   }
 }
 

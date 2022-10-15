@@ -4,10 +4,8 @@ import * as THREE from 'three';
 import Global from '../render/global';
 import Activation from './activation';
 import Clamp from '../util/clamp';
+import Config from './config';
 import { v4 as uuidv4 } from 'uuid';
-
-const CHANGED_THRESHOLD = 0.01;
-const BLEND = 0.025;
 
 class Neuron {
   constructor(params) {
@@ -20,6 +18,7 @@ class Neuron {
     // state
     this.value = 0;
     this.error = 0;
+    this.derivative = -1;
     this.valueBuffer = this.value;
     this.errorBuffer = this.error;
     this.changed = false;
@@ -45,17 +44,36 @@ class Neuron {
 
   addConnectionIn(conn) {
     this.connections.in.push(conn);
-    this.chooseActivationFunction();
+    this.onConnected();
   }
 
   addConnectionOut(conn) {
     this.connections.out.push(conn);
-    this.chooseActivationFunction();
+    this.onConnected();
   }
 
-  chooseActivationFunction() {
-    if (this.activation === Activation.NONE) {
-      this.activation = Activation.LEAKY_RELU;
+  isConnected(neuron) {
+    return this.connections.in.findIndex(conn => conn.src.id === neuron.id) !== -1 ||
+      this.connections.out.findIndex(conn => conn.dst.id === neuron.id) !== -1;
+  }
+
+  isInputNeuron() {
+    return this.connections.in.findIndex(conn => conn.hasSensor) !== -1;
+  }
+
+  isOutputNeuron() {
+    return this.connections.out.findIndex(conn => conn.hasSensor) !== -1;
+  }
+
+  onConnected() {
+    if (this.isInputNeuron()) {
+      this.activation = Activation.RELU;
+    } else if (this.isOutputNeuron()) {
+      this.activation = Activation.SIGMOID;
+    } else {
+      if (this.activation === Activation.NONE) {
+        this.activation = Activation.LEAKY_RELU;
+      }
     }
   }
 
@@ -68,7 +86,12 @@ class Neuron {
     // buffer output error
     let error = 0;
     this.connections.out.forEach(conn => { error += conn.getError(); });
-    this.errorBuffer = error * Activation.getDerivative(this.activation, this.value);
+    this.derivative = Activation.getDerivative(this.activation, this.value);
+    this.errorBuffer = error * this.derivative;
+  }
+
+  randomise() {
+    this.value = Math.random();
   }
 
   swap() {
@@ -76,11 +99,19 @@ class Neuron {
     this.error = this.errorBuffer;
   }
 
+  drift() {
+    const DRIFT = 0.25;
+    this.mesh.position.x += (Math.random() * 2 - 1) * DRIFT;
+    this.mesh.position.z += (Math.random() * 2 - 1) * DRIFT;
+    this.connections.in.forEach(conn => conn.setPosition());
+    this.connections.out.forEach(conn => conn.setPosition());
+  }
+
   update() {
-    let scale = this.mesh.scale.x + (Math.max(0.25, this.value) - this.mesh.scale.x) * BLEND;
+    let scale = this.mesh.scale.x + (Math.max(0.25, this.value) - this.mesh.scale.x) * Config.BLEND_FACTOR;
     this.mesh.scale.setScalar(scale);
     let target = Clamp(this.value, 0, 1);
-    this.mesh.material.emissiveIntensity += (target - this.mesh.material.emissiveIntensity) * BLEND;
+    this.mesh.material.emissiveIntensity += (target - this.mesh.material.emissiveIntensity) * Config.BLEND_FACTOR;
   }
 }
 

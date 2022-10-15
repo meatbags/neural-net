@@ -8,10 +8,11 @@ class Loop {
   bind(root) {
     this.ref = {};
     this.ref.renderer = root.modules.renderer;
+    this.ref.camera = root.modules.camera;
     this.ref.neuralNetworkDynamic = root.modules.neuralNetworkDynamic;
     this.start();
   }
-  
+
   start() {
     if (this.active) return;
     this.active = true;
@@ -32,7 +33,8 @@ class Loop {
     let delta = Math.min((now - this.timer.now) / 1000, this.timer.deltaMax);
     this.timer.now = now;
 
-    // update, render
+    // update
+    this.ref.camera.update(delta);
     this.ref.neuralNetworkDynamic.update(delta);
     this.ref.renderer.render();
   }
