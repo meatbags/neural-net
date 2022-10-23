@@ -82,6 +82,12 @@ class Connection {
     this.mesh.rotation.z = theta - Math.PI / 2;
   }
 
+  destroy() {
+    if (this.src.isNeuron) this.src.removeConnection(this);
+    if (this.dst.isNeuron) this.src.removeConnection(this);
+    Global.Scene.remove(this.mesh);
+  }
+
   update() {
     let s = Math.max(0.25, this.weight * this.src.getValue()) * 0.25;
     s = this.mesh.scale.x + (s - this.mesh.scale.x) * Config.BLEND_FACTOR;

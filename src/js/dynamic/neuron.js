@@ -16,6 +16,7 @@ class Neuron {
     this.bias = params.bias || 0;
 
     // state
+    this.active = true;
     this.value = 0;
     this.error = 0;
     this.derivative = -1;
@@ -50,6 +51,11 @@ class Neuron {
   addConnectionOut(conn) {
     this.connections.out.push(conn);
     this.onConnected();
+  }
+
+  removeConnection(conn) {
+    this.connections.out = this.connections.out.filter(c => c.id !== conn.id);
+    this.connections.in = this.connections.in.filter(c => c.id !== conn.id);
   }
 
   isConnected(neuron) {
@@ -105,6 +111,12 @@ class Neuron {
     this.mesh.position.z += (Math.random() * 2 - 1) * DRIFT;
     this.connections.in.forEach(conn => conn.setPosition());
     this.connections.out.forEach(conn => conn.setPosition());
+  }
+
+  destroy() {
+    this.connections.in.forEach(conn => conn.destroy());
+    this.connections.out.forEach(conn => conn.destroy());
+    Global.Sceme.remove(this.mesh);
   }
 
   update() {

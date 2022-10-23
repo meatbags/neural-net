@@ -14,13 +14,15 @@ class Camera {
     this.rotationSpeed = Math.PI * 2 / 120;
   }
 
+  setSizeToScreen() {
+    let rect = document.querySelector('canvas').getBoundingClientRect();
+    this.camera.aspect = rect.width / rect.height;
+    this.camera.updateProjectionMatrix();
+  }
+
   resize() {
-    setTimeout(() => {
-      // set aspect
-      let rect = document.querySelector('canvas').getBoundingClientRect();
-      this.camera.aspect = rect.width / rect.height;
-      this.camera.updateProjectionMatrix();
-    }, 50);
+    this.setSizeToScreen();
+    setTimeout(() => { this.setSizeToScreen(); }, 50);
   }
 
   update(delta) {
